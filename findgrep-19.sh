@@ -1,5 +1,5 @@
 #! /bin/bash
 
-pattern = $1
+dsdssdsdsdsdpattern = $1
 find . -type f | xargs grep -nH "$pattern"
 
