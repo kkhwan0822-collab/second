@@ -2,4 +2,6 @@ work.txt work.txt
 content
 
 안녕하세요 !
-dsddsddddds!
+d
+sddsddddds!
+apple
