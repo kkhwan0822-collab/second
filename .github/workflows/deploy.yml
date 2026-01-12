@@ -17,19 +17,14 @@ jobs:
           npm install
           npm run build 
 
-      # 2. S3로 업로드
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ap-northeast-2
+      # 1. 빌드 과정 삭제 (단순 HTML인 경우)
 
+      # 2. S3로 업로드 (현재 경로의 모든 파일을 업로드)
       - name: Upload to S3
         run: |
-          aws s3 sync ./dist s3://my-app-deploy-bucket-0822 --delete
+          aws s3 sync . s3://my-app-deploy-bucket-0822 --delete --exclude ".git*" --exclude ".github*"
 
-      # 3. EC2 접속 및 S3 파일 동기화
+      # 3. EC2 접속 (기존과 동일)
       - name: SSH to EC2 and Pull from S3
         uses: appleboy/ssh-action@v1.0.3
         with:
@@ -37,6 +32,5 @@ jobs:
           username: ${{ secrets.EC2_USERNAME }}
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
-            # S3에서 EC2로 파일 가져오기
-            # 만약 권한 에러가 나면 /var/www/html 대신 /home/ec2-user/app 같은 경로를 써보세요.
+            mkdir -p /home/ec2-user/app
             aws s3 sync s3://my-app-deploy-bucket-0822 /home/ec2-user/app --delete
