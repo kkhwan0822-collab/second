@@ -29,5 +29,6 @@ jobs:
           username: ec2-user
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
-            sudo cp -r /home/ec2-user/* /var/www/html/
+            # web 폴더 '안'에 있는 모든 파일(/*)을 메인 경로(/var/www/html/)로 복사해라!
+            sudo cp -r /home/ec2-user/web/* /var/www/html/
             sudo systemctl restart nginx
