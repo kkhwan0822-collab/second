@@ -20,7 +20,8 @@ jobs:
 
       - name: Upload to S3
         run: |
-          aws s3 sync . s3://my-app-deploy-bucket-0822 --delete --exclude ".git*" --exclude ".github*"
+          # 핵심 수정: 현재 폴더가 아니라 web 폴더 안의 내용만 S3로 보냅니다.
+          aws s3 sync ./web s3://my-app-deploy-bucket-0822 --delete
 
       - name: SSH to EC2 and Pull from S3
         uses: appleboy/ssh-action@v1.0.3
@@ -31,4 +32,3 @@ jobs:
           script: |
             mkdir -p /home/ec2-user/app
             aws s3 sync s3://my-app-deploy-bucket-0822 /home/ec2-user/app --delete
-            ls -al /home/ec2-user/app
