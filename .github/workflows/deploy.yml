@@ -22,6 +22,7 @@ jobs:
           target: "/home/ec2-user/"
 
       # 2. EC2 내부에서 파일을 엔진엑스 경로로 옮기고 엔진엑스 재시작
+      
       - name: SSH Remote Commands
         uses: appleboy/ssh-action@master
         with:
@@ -29,6 +30,11 @@ jobs:
           username: ec2-user
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
-            # web 폴더 '안'에 있는 모든 파일(/*)을 메인 경로(/var/www/html/)로 복사해라!
-            sudo cp -r /home/ec2-user/web/* /var/www/html/
+            # 1. 권한 문제 해결을 위해 목적지 폴더 권한을 일시적으로 풉니다.
+            sudo chmod -R 777 /var/www/html
+
+            # 2. web 폴더 안의 내용을 강제로(-f) 복사합니다.
+            sudo cp -rf /home/ec2-user/web/* /var/www/html/
+
+            # 3. 엔진엑스를 재시작합니다.
             sudo systemctl restart nginx
