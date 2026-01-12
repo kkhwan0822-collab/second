@@ -1,41 +1,42 @@
-name: EC2 Static Deploy
+name: Deploy to EC2
 
 on:
   push:
-    branches: [ main ]  # main 브랜치에 push될 때 작동
+    branches: [ main ]
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
-      # 1. GitHub의 모든 파일(web, css 등)을 EC2의 임시 폴더로 복사
-      - name: Copy All Files to EC2
-        uses: appleboy/scp-action@master
+      # 1. 빌드 (프로젝트에 맞는 빌드 명령어를 쓰세요)
+      - name: Build
+        run: |
+          npm install
+          npm run build 
+
+      # 2. S3로 업로드
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ap-northeast-2
+
+      - name: Upload to S3
+        run: |
+          aws s3 sync ./dist s3://my-app-deploy-bucket-0822 --delete
+
+      # 3. EC2 접속 및 S3 파일 동기화
+      - name: SSH to EC2 and Pull from S3
+        uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.EC2_HOST }}
-          username: ec2-user
-          key: ${{ secrets.EC2_SSH_KEY }}
-          source: "."
-          target: "/home/ec2-user/"
-
-      # 2. EC2 내부에서 파일을 엔진엑스 경로로 옮기고 엔진엑스 재시작
-      
-      - name: SSH Remote Commands
-        uses: appleboy/ssh-action@master
-        with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ec2-user
+          username: ${{ secrets.EC2_USERNAME }}
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
-            sudo chmod -R 777 /var/www/html
-            sudo chmod -R 777 /usr/share/nginx/html
-
-            # 1번 경로로 복사
-            sudo cp -rf /home/ec2-user/web/* /var/www/html/
-            # 2번 경로로도 복사 (확실하게 하기 위해)
-            sudo cp -rf /home/ec2-user/web/* /usr/share/nginx/html/
-
-            sudo systemctl restart nginx
+            # S3에서 EC2로 파일 가져오기
+            # 만약 권한 에러가 나면 /var/www/html 대신 /home/ec2-user/app 같은 경로를 써보세요.
+            aws s3 sync s3://my-app-deploy-bucket-0822 /home/ec2-user/app --delete
