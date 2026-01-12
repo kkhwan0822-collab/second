@@ -30,15 +30,12 @@ jobs:
           username: ec2-user
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
-            # 1. Nginx 폴더의 권한을 완전히 풉니다.
             sudo chmod -R 777 /var/www/html
+            sudo chmod -R 777 /usr/share/nginx/html
 
-            # 2. 기존에 있던 옛날 파일들을 모두 지웁니다.
-            sudo rm -rf /var/www/html/*
-
-            # 3. web 폴더 '안에 있는 내용물만' /var/www/html로 복사합니다.
-            # (web/* 처럼 뒤에 별표를 붙이는 것이 중요합니다)
+            # 1번 경로로 복사
             sudo cp -rf /home/ec2-user/web/* /var/www/html/
+            # 2번 경로로도 복사 (확실하게 하기 위해)
+            sudo cp -rf /home/ec2-user/web/* /usr/share/nginx/html/
 
-            # 4. Nginx를 재시작하여 변경사항을 반영합니다.
             sudo systemctl restart nginx
